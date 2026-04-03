@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Study Tutor 🚀</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://js.puter.com/v2/"></script>
+<style>
+:root {
+  --bg: #f0f0ff;
+  --card: #fff;
+  --border: #e0dcff;
+  --text: #1a1730;
+  --muted: #7b78a0;
+  --r: 14px; --rl: 20px; --rxl: 28px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+/* BG */
+.bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.blob { position: absolute; border-radius: 50%; filter: blur(100px); opacity: .13; animation: drift 12s ease-in-out infinite; }
+.b1 { width: 700px; height: 700px; background: #6c3aed; top: -200px; left: -200px; animation-duration: 14s; }
+.b2 { width: 500px; height: 500px; background: #ec4899; top: 30%; right: -150px; animation-duration: 10s; animation-delay: -3s; }
+.b3 { width: 450px; height: 450px; background: #0ea5e9; bottom: -100px; left: 20%; animation-duration: 16s; animation-delay: -7s; }
+.b4 { width: 350px; height: 350px; background: #10b981; top: 10%; left: 50%; animation-duration: 11s; animation-delay: -5s; }
+@keyframes drift { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.04); } 66% { transform: translate(-20px,30px) scale(.97); } }
+
+/* APP */
+.app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* TOPBAR */
+.topbar {
+  background: rgba(255,255,255,.88); backdrop-filter: blur(20px);
+  border-bottom: 2px solid var(--border); padding: 0 1.5rem;
+  height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  position: sticky; top: 0; z-index: 60;
+}
+.logo { display: flex; align-items: center; gap: 10px; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 20px; color: #6c3aed; }
+.logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, #6c3aed, #ec4899); border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 19px; box-shadow: 0 4px 14px rgba(108,58,237,.35); flex-shrink: 0; }
+.top-mid { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; }
+.grade-pill { display: flex; align-items: center; gap: 6px; background: #ede9ff; border: 2px solid #c4b5fd; border-radius: 999px; padding: 5px 14px 5px 10px; }
+.grade-lbl { font-size: 11px; font-weight: 800; color: #6c3aed; letter-spacing: .06em; }
+.grade-sel { background: transparent; border: none; color: #6c3aed; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px; cursor: pointer; outline: none; }
+.score-pill { background: linear-gradient(135deg, #6c3aed, #0ea5e9); color: #fff; border-radius: 999px; padding: 6px 16px; font-size: 13px; font-weight: 800; font-family: 'Nunito', sans-serif; box-shadow: 0 3px 12px rgba(108,58,237,.3); white-space: nowrap; }
+
+/* LAYOUT */
+.layout { display: grid; grid-template-columns: 260px 1fr; flex: 1; min-height: calc(100vh - 62px); }
+
+/* SIDEBAR */
+.sidebar {
+  background: rgba(255,255,255,.75); backdrop-filter: blur(16px);
+  border-right: 2px solid var(--border); padding: 1rem .875rem;
+  display: flex; flex-direction: column; gap: 3px;
+  position: sticky; top: 62px; height: calc(100vh - 62px); overflow-y: auto;
+}
+.s-label { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: var(--muted); padding: 0 10px; margin: 12px 0 5px; text-transform: uppercase; }
+.s-label:first-child { margin-top: 0; }
+.s-divider { height: 2px; background: var(--border); border-radius: 2px; margin: 6px 4px; }
+
+/* SUBJECT SWITCHER */
+.subj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 4px; }
+.subj-btn {
+  padding: 9px 6px; border-radius: var(--r); border: 2px solid var(--border);
+  background: white; cursor: pointer; font-family: 'Nunito', sans-serif;
+  font-size: 12px; font-weight: 800; transition: all .15s;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted);
+}
+.subj-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+.subj-btn.active { color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+.subj-btn .s-emoji { font-size: 20px; }
+
+/* Subject colors */
+.subj-btn[data-subj="math"].active       { background: linear-gradient(135deg,#3b82f6,#6366f1); }
+.subj-btn[data-subj="science"].active    { background: linear-gradient(135deg,#10b981,#0ea5e9); }
+.subj-btn[data-subj="ela"].active        { background: linear-gradient(135deg,#8b5cf6,#ec4899); }
+.subj-btn[data-subj="history"].active    { background: linear-gradient(135deg,#f59e0b,#ef4444); }
+.subj-btn[data-subj="geography"].active  { background: linear-gradient(135deg,#06b6d4,#3b82f6); }
+.subj-btn[data-subj="cs"].active         { background: linear-gradient(135deg,#1e293b,#6366f1); }
+.subj-btn[data-subj="health"].active     { background: linear-gradient(135deg,#f43f5e,#fb923c); }
+.subj-btn[data-subj="art"].active        { background: linear-gradient(135deg,#a855f7,#f472b6); }
+
+/* NAV TOPICS */
+.nav-btn {
+  width: 100%; text-align: left; padding: 8px 11px; border-radius: var(--r);
+  border: 2px solid transparent; background: transparent; color: var(--muted);
+  cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+  transition: all .15s; display: flex; align-items: center; gap: 8px;
+}
+.nav-btn:hover { background: #ede9ff; color: #6c3aed; }
+.nav-btn.active { background: #6c3aed; color: #fff; border-color: #6c3aed; box-shadow: 0 3px 12px rgba(108,58,237,.3); }
+.nav-icon { font-size: 15px; min-width: 19px; text-align: center; }
+
+.new-btn {
+  margin-top: auto; padding: 10px 12px; border-radius: var(--r);
+  border: 2px solid #6c3aed; background: white; color: #6c3aed;
+  cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800;
+  transition: all .2s; display: flex; align-items: center; gap: 8px;
+}
+.new-btn:hover { background: #6c3aed; color: #fff; box-shadow: 0 4px 16px rgba(108,58,237,.35); }
+.new-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* TOPIC BADGE */
+.topic-badge {
+  display: flex; align-items: center; justify-content: space-between; gap: 5px;
+  padding: 5px 10px; border-radius: var(--r); background: #ccfbf1; border: 2px solid #0d9488;
+  color: #0d9488; font-size: 12px; font-weight: 700; cursor: pointer; margin: 3px 2px;
+}
+.topic-badge span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
+.topic-badge button { background: none; border: none; color: #0d9488; cursor: pointer; font-size: 13px; padding: 0; }
+
+/* MAIN */
+.main { padding: 1.75rem; max-width: 820px; }
+
+/* SKILL HEADER */
+.skill-hdr { margin-bottom: 1.5rem; }
+.skill-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: .5rem; }
+.skill-title { font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 900; letter-spacing: -.02em; }
+.skill-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.std-badge { font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 999px; background: #ede9ff; color: #6c3aed; border: 2px solid #c4b5fd; white-space: nowrap; }
+.diff-row { display: flex; gap: 6px; margin: .75rem 0; }
+.diff-btn { padding: 5px 14px; border-radius: 999px; border: 2px solid var(--border); background: white; color: var(--muted); font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .15s; }
+.diff-btn.active { border-color: #6c3aed; color: #6c3aed; background: #ede9ff; }
+.diff-btn:hover:not(.active) { border-color: #c4b5fd; color: #6c3aed; }
+.prog-wrap { height: 8px; background: var(--border); border-radius: 999px; margin-bottom: 1.5rem; overflow: hidden; }
+.prog-bar { height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.34,1.56,.64,1); background: linear-gradient(90deg,#6c3aed,#ec4899,#0ea5e9); }
+
+/* QUESTION CARD */
+.q-card {
+  background: var(--card); border: 2px solid var(--border); border-radius: var(--rl);
+  overflow: hidden; margin-bottom: 1.5rem;
+  box-shadow: 0 4px 24px rgba(108,58,237,.07);
+  animation: cardIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: none; } }
+
+.p-block { background: linear-gradient(135deg,#f5f3ff,#fdf2f8); border-bottom: 2px solid var(--border); padding: 1.2rem 1.5rem; }
+.p-label { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: #6c3aed; margin-bottom: 8px; text-transform: uppercase; }
+.p-text { font-size: 14px; line-height: 1.9; color: var(--text); }
+
+.q-body { padding: 1.2rem 1.5rem; }
+.type-row { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.tbadge { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+.b-mc { background: #ccfbf1; color: #0d9488; border: 2px solid #99f6e4; }
+.b-sa { background: #fef3c7; color: #d97706; border: 2px solid #fde68a; }
+.b-pt { background: #fce7f3; color: #db2777; border: 2px solid #f9a8d4; }
+.b-gpt { background: #ffedd5; color: #ea580c; border: 2px solid #fed7aa; }
+.b-diff { background: var(--border); color: var(--muted); border: 2px solid var(--border); }
+
+.q-text { font-size: 16px; line-height: 1.7; margin-bottom: 1rem; font-weight: 500; }
+
+/* CHOICES — interactive with hover bounce */
+.choices { display: flex; flex-direction: column; gap: 8px; }
+.choice {
+  display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px;
+  border-radius: var(--r); border: 2px solid var(--border);
+  cursor: pointer; font-size: 14px; font-weight: 600; transition: all .18s;
+  color: var(--text); background: white; text-align: left; width: 100%;
+  font-family: 'Outfit', sans-serif; line-height: 1.5; position: relative; overflow: hidden;
+}
+.choice::before { content: ''; position: absolute; inset: 0; background: currentColor; opacity: 0; transition: opacity .15s; }
+.choice:hover:not(:disabled) { border-color: #6c3aed; background: #ede9ff; color: #6c3aed; transform: translateX(4px); }
+.choice:disabled { cursor: default; transform: none !important; }
+.choice.correct { border-color: #10b981; background: #d1fae5; color: #065f46; transform: none; }
+.choice.wrong { border-color: #ef4444; background: #fee2e2; color: #7f1d1d; transform: none; }
+.c-letter {
+  width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900;
+  flex-shrink: 0; font-family: 'Nunito', sans-serif; background: white; transition: all .15s;
+}
+.choice:hover:not(:disabled) .c-letter { background: #6c3aed; border-color: #6c3aed; color: #fff; }
+.choice.correct .c-letter { background: #10b981; border-color: #10b981; color: #fff; }
+.choice.wrong .c-letter { background: #ef4444; border-color: #ef4444; color: #fff; }
+
+/* INTERACTIVE ELEMENTS for math/CS */
+.interactive-wrap { margin-bottom: 12px; }
+.calc-area { background: #1e1b3a; border-radius: var(--r); padding: 14px; margin-bottom: 10px; }
+.calc-display { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 800; color: #a78bfa; text-align: right; min-height: 32px; margin-bottom: 8px; word-break: break-all; }
+.calc-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+.calc-btn {
+  padding: 10px 6px; border-radius: 8px; border: none; font-family: 'Nunito', sans-serif;
+  font-size: 14px; font-weight: 800; cursor: pointer; transition: all .12s;
+}
+.calc-btn:hover { transform: scale(1.06); }
+.calc-btn:active { transform: scale(.94); }
+.calc-num { background: #2d2a4a; color: #e2e0ff; }
+.calc-op { background: #6c3aed; color: #fff; }
+.calc-eq { background: #10b981; color: #fff; }
+.calc-clr { background: #ef4444; color: #fff; }
+.calc-zero { grid-column: span 2; }
+
+/* DIAGRAM AREA */
+.diagram-area { background: #f5f3ff; border: 2px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 10px; text-align: center; }
+.diagram-area svg text { font-family: 'Nunito', sans-serif; }
+
+/* SA AREA */
+.sa-area {
+  width: 100%; background: var(--bg); border: 2px solid var(--border);
+  border-radius: var(--r); padding: 12px 14px; color: var(--text);
+  font-family: 'Outfit', sans-serif; font-size: 14px; resize: vertical;
+  transition: border-color .2s; min-height: 100px; line-height: 1.7;
+}
+.sa-area:focus { outline: none; border-color: #6c3aed; background: white; }
+.sa-area.tall { min-height: 200px; }
+
+/* BUTTONS */
+.btn { padding: 10px 20px; border-radius: var(--r); border: 2px solid transparent; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.btn-check { background: #6c3aed; color: #fff; box-shadow: 0 4px 12px rgba(108,58,237,.3); }
+.btn-check:hover { background: #5b21b6; }
+.btn-hint-toggle { background: white; color: #d97706; border: 2px solid #fde68a; }
+.btn-hint-toggle:hover { background: #fef3c7; }
+.btn-grade { background: linear-gradient(135deg,#f59e0b,#ea580c); color: #fff; box-shadow: 0 4px 12px rgba(245,158,11,.3); }
+.btn-grade:hover { box-shadow: 0 6px 18px rgba(245,158,11,.4); }
+.btn-next { background: white; color: #10b981; border: 2px solid #6ee7b7; }
+.btn-next:hover { background: #d1fae5; }
+.sa-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.next-row { display: flex; justify-content: flex-end; margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--border); }
+
+/* FEEDBACK */
+.fb { margin-top: 12px; padding: 12px 15px; border-radius: var(--r); font-size: 14px; line-height: 1.7; display: none; border-left: 4px solid; font-weight: 500; animation: fbIn .3s ease-out; }
+.fb.show { display: block; }
+@keyframes fbIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fb.good { background: #d1fae5; color: #065f46; border-color: #10b981; }
+.fb.bad { background: #fee2e2; color: #7f1d1d; border-color: #ef4444; }
+.fb.info { background: #fef3c7; color: #78350f; border-color: #d97706; }
+
+/* ── AI HINT BOX ── */
+.hint-wrap { margin-top: 12px; display: none; }
+.hint-wrap.open { display: block; animation: cardIn .25s cubic-bezier(.34,1.56,.64,1); }
+.hint-card {
+  border: 2px solid #fde68a; border-radius: var(--rl);
+  background: linear-gradient(135deg,#fffbeb,#fff7f0); overflow: hidden;
+}
+.hint-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: linear-gradient(90deg,#fef3c7,#ffedd5);
+  border-bottom: 2px solid #fde68a;
+}
+.hint-head-l { display: flex; align-items: center; gap: 8px; }
+.hint-owl {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg,#f59e0b,#ea580c);
+  display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+}
+.hint-hd-title { font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 900; color: #78350f; }
+.hint-hd-sub { font-size: 11px; color: #92400e; font-weight: 600; }
+.hint-close-btn { background: none; border: none; cursor: pointer; font-size: 17px; color: #92400e; transition: transform .15s; padding: 2px; }
+.hint-close-btn:hover { transform: scale(1.2) rotate(90deg); }
+.hint-rule {
+  margin: 10px 14px 2px; padding: 7px 11px;
+  background: white; border: 2px dashed #fde68a; border-radius: var(--r);
+  font-size: 11px; font-weight: 800; color: #92400e;
+  display: flex; align-items: center; gap: 6px;
+}
+.hint-chips { display: flex; gap: 5px; flex-wrap: wrap; padding: 8px 14px; }
+.hint-chip { padding: 4px 10px; border-radius: 999px; border: 2px solid #fde68a; background: white; color: #92400e; font-size: 11px; font-weight: 800; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .12s; }
+.hint-chip:hover { background: #fef3c7; border-color: #d97706; transform: translateY(-1px); }
+.hint-chat { max-height: 230px; overflow-y: auto; padding: 6px 14px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
+.h-msg { padding: 8px 12px; border-radius: var(--r); font-size: 13px; line-height: 1.6; animation: msgIn .2s ease-out; }
+@keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.h-user { background: #6c3aed; color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; max-width: 85%; font-weight: 600; }
+.h-ai { background: white; border: 2px solid #fde68a; border-bottom-left-radius: 4px; max-width: 92%; color: var(--text); }
+.h-think { background: #fef3c7; color: #92400e; font-style: italic; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+.dots span { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #d97706; animation: db .8s ease-in-out infinite; }
+.dots span:nth-child(2) { animation-delay: .15s; }
+.dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes db { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.hint-input-row { display: flex; gap: 6px; padding: 8px 14px 12px; border-top: 2px solid #fde68a; }
+.hint-inp { flex: 1; background: white; border: 2px solid #fde68a; border-radius: var(--r); padding: 8px 11px; font-family: 'Outfit', sans-serif; font-size: 13px; color: var(--text); outline: none; transition: border-color .2s; }
+.hint-inp:focus { border-color: #d97706; }
+.hint-send { padding: 8px 14px; border-radius: var(--r); border: none; background: linear-gradient(135deg,#f59e0b,#ea580c); color: white; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.hint-send:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,158,11,.4); }
+.hint-send:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* HELP FAB */
+.help-fab {
+  position: fixed; bottom: 28px; right: 28px; z-index: 100;
+  background: linear-gradient(135deg,#6c3aed,#ec4899);
+  color: #fff; border: none; border-radius: 999px;
+  padding: 14px 22px; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900;
+  cursor: pointer; box-shadow: 0 8px 32px rgba(108,58,237,.45);
+  display: flex; align-items: center; gap: 8px;
+  transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  animation: fabIn .5s .4s both cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes fabIn { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: none; } }
+.help-fab:hover { transform: scale(1.06) translateY(-2px); box-shadow: 0 12px 40px rgba(108,58,237,.55); }
+.fab-ring { position: absolute; inset: -5px; border-radius: 999px; background: linear-gradient(135deg,#6c3aed,#ec4899); opacity: .25; animation: ring 2.5s ease-in-out infinite; z-index: -1; }
+@keyframes ring { 0%,100% { transform: scale(1); opacity: .25; } 50% { transform: scale(1.12); opacity: .08; } }
+
+/* HELP PANEL */
+.help-ov { display: none; position: fixed; inset: 0; background: rgba(26,23,48,.5); z-index: 200; backdrop-filter: blur(4px); }
+.help-ov.open { display: flex; align-items: stretch; justify-content: flex-end; }
+.help-panel {
+  background: white; width: 400px; display: flex; flex-direction: column;
+  border-left: 3px solid var(--border); box-shadow: -8px 0 40px rgba(108,58,237,.15);
+  animation: slideIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: none; } }
+.hp-hdr { padding: 1.1rem 1.4rem; border-bottom: 2px solid var(--border); background: linear-gradient(135deg,#f5f3ff,#fdf2f8); display: flex; align-items: center; justify-content: space-between; }
+.hp-title { font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 900; color: #6c3aed; display: flex; align-items: center; gap: 8px; }
+.hp-x { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); transition: color .15s; }
+.hp-x:hover { color: #ef4444; }
+.hp-body { flex: 1; overflow-y: auto; padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 10px; }
+.hp-qlabel { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; }
+.qchips { display: flex; flex-wrap: wrap; gap: 5px; }
+.qchip { padding: 5px 12px; border-radius: 999px; border: 2px solid #c4b5fd; background: #ede9ff; color: #6c3aed; font-size: 12px; font-weight: 800; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .12s; }
+.qchip:hover { background: #6c3aed; color: #fff; transform: translateY(-1px); }
+.help-divider { height: 2px; background: var(--border); border-radius: 2px; }
+.chat-list { display: flex; flex-direction: column; gap: 8px; }
+.c-msg { padding: 9px 12px; border-radius: var(--r); font-size: 13px; line-height: 1.6; animation: msgIn .2s ease-out; }
+.c-user { background: #6c3aed; color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; max-width: 85%; font-weight: 600; }
+.c-ai { background: #ede9ff; border: 2px solid #c4b5fd; border-bottom-left-radius: 4px; max-width: 92%; }
+.c-think { background: var(--border); color: var(--muted); font-style: italic; font-size: 12px; }
+.hp-inp-row { display: flex; flex-direction: column; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 2px solid var(--border); }
+.hp-ta { width: 100%; min-height: 80px; background: var(--bg); border: 2px solid var(--border); border-radius: var(--r); padding: 10px 12px; font-family: 'Outfit', sans-serif; font-size: 13px; color: var(--text); resize: none; outline: none; transition: border-color .2s; }
+.hp-ta:focus { border-color: #6c3aed; background: white; }
+.hp-send { padding: 9px 18px; border-radius: var(--r); border: none; background: linear-gradient(135deg,#6c3aed,#ec4899); color: #fff; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; align-self: flex-end; transition: all .15s; }
+.hp-send:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(108,58,237,.4); }
+.hp-send:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* GRADE RESULT */
+.grade-box { margin-top: 16px; padding: 1.25rem; background: linear-gradient(135deg,#f5f3ff,#fff7ed); border: 2px solid var(--border); border-radius: var(--rl); animation: cardIn .3s ease-out; }
+.grade-hdr-row { font-size: 13px; font-weight: 800; color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.big-score { font-family: 'Nunito', sans-serif; font-size: 44px; font-weight: 900; line-height: 1; }
+.big-score.great { color: #10b981; } .big-score.ok { color: #d97706; } .big-score.low { color: #ef4444; }
+.score-sub { font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.dim-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 8px; margin: 12px 0; }
+.dim-c { background: white; border: 2px solid var(--border); border-radius: var(--r); padding: 10px 12px; }
+.dim-n { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: .05em; text-transform: uppercase; margin-bottom: 3px; }
+.dim-s { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900; }
+.dim-s.full { color: #10b981; } .dim-s.part { color: #d97706; } .dim-s.low { color: #ef4444; }
+.dim-f { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+.ins-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.ins { padding: 10px 12px; border-radius: var(--r); }
+.ins-s { background: #d1fae5; border: 2px solid #6ee7b7; }
+.ins-n { background: #fef3c7; border: 2px solid #fde68a; }
+.ins-l { font-size: 10px; font-weight: 900; letter-spacing: .06em; margin-bottom: 3px; }
+.ins-s .ins-l { color: #10b981; } .ins-n .ins-l { color: #d97706; }
+.ins p { font-size: 13px; font-weight: 600; }
+
+/* LOAD / EMPTY */
+.load-card { background: white; border: 2px solid var(--border); border-radius: var(--rl); padding: 3rem 2rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 14px; box-shadow: 0 4px 24px rgba(108,58,237,.07); }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: #6c3aed; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.load-txt { font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; color: var(--muted); }
+.bouncer { font-size: 34px; animation: bou .7s ease-in-out infinite alternate; }
+@keyframes bou { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+.empty { padding: 3rem 2rem; text-align: center; }
+.empty-ico { font-size: 60px; animation: float 3s ease-in-out infinite; margin-bottom: 1rem; }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+.empty-t { font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+.empty-s { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 420px; margin: 0 auto; }
+
+/* MODAL */
+.modal-ov { display: none; position: fixed; inset: 0; background: rgba(26,23,48,.5); z-index: 300; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(5px); }
+.modal-ov.open { display: flex; }
+.modal { background: white; border: 2px solid var(--border); border-radius: var(--rxl); padding: 1.75rem; width: 100%; max-width: 460px; box-shadow: 0 24px 60px rgba(108,58,237,.2); animation: modalIn .3s cubic-bezier(.34,1.56,.64,1); }
+@keyframes modalIn { from { opacity: 0; transform: scale(.88) translateY(20px); } to { opacity: 1; transform: none; } }
+.m-title { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 900; margin-bottom: 5px; }
+.m-sub { font-size: 13px; color: var(--muted); margin-bottom: 1rem; line-height: 1.6; }
+.m-inp { width: 100%; background: var(--bg); border: 2px solid var(--border); border-radius: var(--r); padding: 10px 13px; color: var(--text); font-family: 'Outfit', sans-serif; font-size: 14px; resize: none; min-height: 75px; outline: none; display: block; transition: border-color .2s; }
+.m-inp:focus { border-color: #6c3aed; background: white; }
+.m-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 9px 0 1rem; }
+.m-chip { padding: 5px 12px; border-radius: 999px; border: 2px solid var(--border); background: white; color: var(--muted); font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .12s; }
+.m-chip:hover { border-color: #0d9488; color: #0d9488; background: #ccfbf1; }
+.m-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: .9rem; }
+.m-cancel { padding: 8px 16px; border-radius: var(--r); border: 2px solid var(--border); background: white; color: var(--muted); cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; }
+.m-apply { padding: 8px 18px; border-radius: var(--r); border: 2px solid #0d9488; background: #ccfbf1; color: #0d9488; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; }
+.m-apply:hover { background: #0d9488; color: #fff; }
+.m-apply:disabled { opacity: .4; cursor: not-allowed; }
+
+/* CONFETTI */
+.cf { position: fixed; width: 10px; height: 10px; border-radius: 2px; pointer-events: none; z-index: 9999; animation: cfFall 1.3s ease-in forwards; }
+@keyframes cfFall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(720deg); } }
+
+@media(max-width:700px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main { padding: 1rem; }
+  .top-mid { display: none; }
+  .help-panel { width: 100vw; }
+  .ins-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="bg">
+  <div class="blob b1"></div><div class="blob b2"></div>
+  <div class="blob b3"></div><div class="blob b4"></div>
+</div>
+
+<div class="app">
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo"><div class="logo-icon">🚀</div>AI Tutor</div>
+  <div class="top-mid">
+    <div class="grade-pill">
+      <span class="grade-lbl">GRADE</span>
+      <select class="grade-sel" id="grade-sel" onchange="onGradeChange()">
+        <option value="3">3rd</option><option value="4">4th</option><option value="5">5th</option>
+        <option value="6" selected>6th</option><option value="7">7th</option><option value="8">8th</option>
+        <option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option>
+      </select>
+    </div>
+  </div>
+  <div class="score-pill" id="score-pill">⭐ 0 / 0</div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+<div class="sidebar">
+  <div class="s-label">Subject</div>
+  <div class="subj-grid">
+    <button class="subj-btn active" data-subj="math"    onclick="setSubject('math')">   <span class="s-emoji">➕</span>Math</button>
+    <button class="subj-btn"        data-subj="science" onclick="setSubject('science')"><span class="s-emoji">🔬</span>Science</button>
+    <button class="subj-btn"        data-subj="ela"     onclick="setSubject('ela')">    <span class="s-emoji">📚</span>ELA</button>
+    <button class="subj-btn"        data-subj="history" onclick="setSubject('history')"><span class="s-emoji">🏛️</span>History</button>
+    <button class="subj-btn"        data-subj="geography" onclick="setSubject('geography')"><span class="s-emoji">🌍</span>Geo</button>
+    <button class="subj-btn"        data-subj="cs"      onclick="setSubject('cs')">     <span class="s-emoji">💻</span>Coding</button>
+    <button class="subj-btn"        data-subj="health"  onclick="setSubject('health')"> <span class="s-emoji">❤️</span>Health</button>
+    <button class="subj-btn"        data-subj="art"     onclick="setSubject('art')">    <span class="s-emoji">🎨</span>Art</button>
+  </div>
+
+  <div class="s-divider"></div>
+  <div class="s-label" id="topic-sidebar-label">Topics</div>
+  <div id="topic-nav"></div>
+
+  <div class="s-divider"></div>
+  <button class="nav-btn" style="color:#0d9488;border-color:#0d9488;background:#ccfbf1" onclick="openTopicModal()">
+    <span class="nav-icon">🎯</span>Custom topic
+  </button>
+  <div id="topic-badge-area"></div>
+  <button class="new-btn" id="gen-btn" onclick="generateQ()"><span>✦</span>New Question</button>
+</div>
+
+<div class="main" id="main">
+  <div class="empty">
+    <div class="empty-ico">🚀</div>
+    <div class="empty-t">Pick a subject & topic!</div>
+    <div class="empty-s">Choose any subject from the left, then pick a topic. AI will generate fresh questions just for you every time — no two are the same!<br><br><strong>👈 Start by choosing a subject</strong></div>
+  </div>
+</div>
+</div>
+</div><!-- /app -->
+
+<!-- FAB -->
+<button class="help-fab" onclick="openHelp()">
+  <div class="fab-ring"></div>💬 Get Help
+</button>
+
+<!-- HELP PANEL -->
+<div class="help-ov" id="help-ov" onclick="if(event.target===this)closeHelp()">
+  <div class="help-panel">
+    <div class="hp-hdr">
+      <div class="hp-title">🤖 Study Helper</div>
+      <button class="hp-x" onclick="closeHelp()">✕</button>
+    </div>
+    <div class="hp-body" id="hp-body">
+      <div class="hp-qlabel">Quick Questions</div>
+      <div class="qchips" id="qchips">
+        <button class="qchip" onclick="qHelp('How do I approach this problem?')">How to approach?</button>
+        <button class="qchip" onclick="qHelp('Can you explain this concept simply?')">Explain simpler</button>
+        <button class="qchip" onclick="qHelp('What formula or rule should I use here?')">What rule/formula?</button>
+        <button class="qchip" onclick="qHelp('Give me a real-world example of this.')">Real example</button>
+        <button class="qchip" onclick="qHelp('What are common mistakes students make on this?')">Common mistakes</button>
+        <button class="qchip" onclick="qHelp('How do I study this topic better?')">Study tips</button>
+      </div>
+      <div class="help-divider"></div>
+      <div class="chat-list" id="chat-list"></div>
+      <div class="hp-inp-row">
+        <div class="hp-qlabel">Ask anything</div>
+        <textarea class="hp-ta" id="hp-ta" placeholder="e.g. 'What is photosynthesis?' or 'How do I find area?'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHelp()}"></textarea>
+        <button class="hp-send" id="hp-send" onclick="sendHelp()">Send ✦</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOPIC MODAL -->
+<div class="modal-ov" id="topic-modal" onclick="if(event.target.id==='topic-modal')closeTopicModal()">
+  <div class="modal">
+    <div class="m-title">🎯 Custom Topic</div>
+    <div class="m-sub">Questions and passages will be themed around your topic for any subject!</div>
+    <textarea class="m-inp" id="topic-inp" maxlength="300" placeholder="e.g. volcanoes, the Civil War, fractions, Shakespeare, DNA, climate change..."></textarea>
+    <div class="m-chips">
+      <button class="m-chip" onclick="mChip('volcanoes and natural disasters')">🌋 Volcanoes</button>
+      <button class="m-chip" onclick="mChip('the Civil War')">⚔️ Civil War</button>
+      <button class="m-chip" onclick="mChip('DNA and genetics')">🧬 DNA</button>
+      <button class="m-chip" onclick="mChip('fractions and decimals')">½ Fractions</button>
+      <button class="m-chip" onclick="mChip('climate change and environment')">🌍 Climate</button>
+      <button class="m-chip" onclick="mChip('space and the solar system')">🚀 Space</button>
+      <button class="m-chip" onclick="mChip('ancient civilizations')">🏛️ Ancient Civs</button>
+      <button class="m-chip" onclick="mChip('Shakespeare and poetry')">📜 Shakespeare</button>
+      <button class="m-chip" onclick="mChip('video games and technology')">🎮 Video games</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted)"><span id="tcc">0</span>/300</div>
+    <div class="m-actions">
+      <button class="m-cancel" onclick="closeTopicModal()">Cancel</button>
+      <button class="m-apply" id="t-apply" onclick="applyTopic()" disabled>Apply 🎯</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────
+const SUBJECTS = {
+  math: {
+    label:'Math', emoji:'➕', color:'#3b82f6',
+    topics:[
+      {key:'arithmetic',  label:'➕ Arithmetic',    desc:'Addition, subtraction, multiplication, division'},
+      {key:'fractions',   label:'½ Fractions',      desc:'Fractions, decimals, and percentages'},
+      {key:'algebra',     label:'𝑥 Algebra',        desc:'Variables, equations, expressions'},
+      {key:'geometry',    label:'📐 Geometry',      desc:'Shapes, area, perimeter, angles'},
+      {key:'statistics',  label:'📊 Statistics',    desc:'Data, graphs, mean, median, mode'},
+      {key:'ratios',      label:'⚖️ Ratios',        desc:'Ratios, rates, proportions'},
+    ]
+  },
+  science: {
+    label:'Science', emoji:'🔬', color:'#10b981',
+    topics:[
+      {key:'biology',     label:'🧬 Biology',       desc:'Living things, cells, organisms'},
+      {key:'chemistry',   label:'⚗️ Chemistry',     desc:'Matter, atoms, reactions'},
+      {key:'physics',     label:'⚡ Physics',       desc:'Forces, motion, energy'},
+      {key:'earth',       label:'🌎 Earth Science', desc:'Rocks, weather, ecosystems'},
+      {key:'space',       label:'🔭 Space',         desc:'Planets, stars, universe'},
+      {key:'scientific',  label:'🧪 Sci. Method',   desc:'Hypotheses, experiments, data'},
+    ]
+  },
+  ela: {
+    label:'ELA', emoji:'📚', color:'#8b5cf6',
+    topics:[
+      {key:'pov',         label:'👁️ Point of View', desc:'Narrator perspective'},
+      {key:'context',     label:'🔍 Context Clues', desc:'Word meaning from context'},
+      {key:'theme',       label:'💡 Theme',         desc:'Central idea and theme'},
+      {key:'figurative',  label:'✨ Figurative Lang',desc:'Metaphors, similes, devices'},
+      {key:'thesis',      label:'📝 Thesis',        desc:'Argument and thesis statements'},
+      {key:'grammar',     label:'🔤 Grammar',       desc:'Punctuation, pronouns, usage'},
+    ]
+  },
+  history: {
+    label:'History', emoji:'🏛️', color:'#f59e0b',
+    topics:[
+      {key:'ancient',     label:'🏺 Ancient History',  desc:'Egypt, Greece, Rome, Mesopotamia'},
+      {key:'medieval',    label:'⚔️ Medieval',         desc:'Middle Ages, knights, feudalism'},
+      {key:'american',    label:'🇺🇸 American History', desc:'Revolution, Civil War, modern US'},
+      {key:'world',       label:'🌍 World History',    desc:'Major civilizations and events'},
+      {key:'government',  label:'🏛️ Government',       desc:'Democracy, Constitution, civics'},
+      {key:'economics',   label:'💰 Economics',        desc:'Supply, demand, trade'},
+    ]
+  },
+  geography: {
+    label:'Geography', emoji:'🌍', color:'#06b6d4',
+    topics:[
+      {key:'maps',        label:'🗺️ Maps & Tools',  desc:'Reading maps, coordinates, scale'},
+      {key:'landforms',   label:'⛰️ Landforms',     desc:'Mountains, rivers, continents'},
+      {key:'climates',    label:'🌦️ Climates',      desc:'Weather patterns and biomes'},
+      {key:'countries',   label:'🌐 Countries',     desc:'Nations, capitals, regions'},
+      {key:'population',  label:'👥 Population',    desc:'Demographics and human geography'},
+      {key:'resources',   label:'🛢️ Resources',     desc:'Natural resources and environment'},
+    ]
+  },
+  cs: {
+    label:'Coding', emoji:'💻', color:'#6366f1',
+    topics:[
+      {key:'basics',      label:'🔢 Basics',         desc:'Variables, data types, operators'},
+      {key:'loops',       label:'🔄 Loops',          desc:'For loops, while loops, iteration'},
+      {key:'conditionals',label:'❓ Conditionals',   desc:'If/else, booleans, logic'},
+      {key:'functions',   label:'🔧 Functions',      desc:'Defining and calling functions'},
+      {key:'data',        label:'📋 Data Structures',desc:'Lists, arrays, dictionaries'},
+      {key:'algorithms',  label:'🧩 Algorithms',     desc:'Problem-solving, sorting, searching'},
+    ]
+  },
+  health: {
+    label:'Health', emoji:'❤️', color:'#f43f5e',
+    topics:[
+      {key:'nutrition',   label:'🥗 Nutrition',       desc:'Food groups, vitamins, diet'},
+      {key:'body',        label:'🫀 Body Systems',    desc:'Organs, skeletal, muscular, nervous'},
+      {key:'fitness',     label:'🏃 Fitness',         desc:'Exercise, cardio, wellness'},
+      {key:'mental',      label:'🧠 Mental Health',   desc:'Emotions, stress, well-being'},
+      {key:'diseases',    label:'🦠 Diseases',        desc:'Immune system, illness prevention'},
+      {key:'safety',      label:'🚑 Safety',          desc:'First aid, injury prevention'},
+    ]
+  },
+  art: {
+    label:'Art', emoji:'🎨', color:'#a855f7',
+    topics:[
+      {key:'elements',    label:'🎭 Elements of Art', desc:'Line, shape, color, texture'},
+      {key:'arthistory',  label:'🖼️ Art History',     desc:'Famous artists and movements'},
+      {key:'color',       label:'🌈 Color Theory',    desc:'Primary colors, mixing, contrast'},
+      {key:'styles',      label:'🖌️ Art Styles',      desc:'Impressionism, abstract, realism'},
+      {key:'music',       label:'🎵 Music',           desc:'Notes, rhythm, instruments'},
+      {key:'media',       label:'📸 Media & Film',    desc:'Photography, film, digital art'},
+    ]
+  },
+};
+
+// ── STATE ───────────────────────────────────────────────
+let subj = 'math', topic = null, skill = null, diff = 'medium', grade = 6;
+let sc = {c:0,t:0}, busy = false, answered = 0;
+let chatHistory = [], hintHistory = [], hintOpen = false;
+let customTopic = null;
+
+// ── INIT ────────────────────────────────────────────────
+window.onload = () => renderTopicNav();
+
+function setSubject(s) {
+  subj = s;
+  skill = null;
+  document.querySelectorAll('.subj-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.subj-btn[data-subj="${s}"]`).classList.add('active');
+  renderTopicNav();
+  document.getElementById('main').innerHTML = `
+    <div class="empty">
+      <div class="empty-ico">${SUBJECTS[s].emoji}</div>
+      <div class="empty-t">${SUBJECTS[s].label}</div>
+      <div class="empty-s">Pick a topic from the sidebar to get started! 👈</div>
+    </div>`;
+}
+
+function renderTopicNav() {
+  const nav = document.getElementById('topic-nav');
+  const s = SUBJECTS[subj];
+  nav.innerHTML = s.topics.map(t => `
+    <button class="nav-btn ${skill===t.key?'active':''}" onclick="setTopic('${t.key}')">
+      <span class="nav-icon">${t.label.split(' ')[0]}</span>
+      <span>${t.label.replace(/^[^\s]+\s/,'')}</span>
+    </button>`).join('');
+}
+
+function setTopic(t) {
+  skill = t;
+  renderTopicNav();
+  generateQ();
+}
+
+function onGradeChange() {
+  grade = parseInt(document.getElementById('grade-sel').value);
+  if (skill) generateQ();
+}
+
+// ── CUSTOM TOPIC ────────────────────────────────────────
+function openTopicModal() {
+  document.getElementById('topic-modal').classList.add('open');
+  const i = document.getElementById('topic-inp');
+  i.value = customTopic || ''; updTCC();
+  setTimeout(()=>i.focus(), 80);
+}
+function closeTopicModal() { document.getElementById('topic-modal').classList.remove('open'); }
+function mChip(v) { document.getElementById('topic-inp').value = v; updTCC(); }
+function updTCC() {
+  const v = document.getElementById('topic-inp').value;
+  document.getElementById('tcc').textContent = v.length;
+  document.getElementById('t-apply').disabled = !v.trim();
+}
+function applyTopic() {
+  const v = document.getElementById('topic-inp').value.trim();
+  if (!v) return;
+  customTopic = v; closeTopicModal(); renderTopicBadge();
+  if (skill) generateQ();
+}
+function clearCustomTopic() { customTopic = null; renderTopicBadge(); if(skill) generateQ(); }
+function renderTopicBadge() {
+  document.getElementById('topic-badge-area').innerHTML = customTopic
+    ? `<div class="topic-badge"><span title="${customTopic}">🎯 ${customTopic}</span><button onclick="clearCustomTopic()">✕</button></div>` : '';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const i = document.getElementById('topic-inp');
+  if(i) i.addEventListener('input', updTCC);
+});
+
+// ── PROMPT BUILDER ──────────────────────────────────────
+function buildPrompt() {
+  const g = grade;
+  const s = SUBJECTS[subj];
+  const t = s.topics.find(x=>x.key===skill) || {label:skill, desc:''};
+  const dMap = {easy:'easy – recall/recognition level', medium:'medium – inference and analysis', hard:'challenging – multi-step reasoning'};
+  const tLine = customTopic ? `\n\nIMPORTANT: Theme ALL examples, passages, and contexts around: "${customTopic}". Keep it natural.` : '';
+
+  const subjPrompts = {
+    math: `Create a Grade ${g} MATH question about: ${t.label} — ${t.desc}.
+The question must test real math understanding, not just memorization.
+For calculation problems, include work space instructions.
+Mix between: word problems, number problems, pattern questions, and diagram-based questions.${tLine}`,
+
+    science: `Create a Grade ${g} SCIENCE question about: ${t.label} — ${t.desc}.
+Include a short scenario, experiment description, or observation (3-6 sentences) if relevant.
+Ask students to apply science concepts, not just recall definitions.${tLine}`,
+
+    ela: `Create a Grade ${g} ELA question about: ${t.label} — ${t.desc}.
+Include a short original passage (4-7 sentences) if the skill requires reading.
+Align to CCSS standards for Grade ${g}.${tLine}`,
+
+    history: `Create a Grade ${g} HISTORY/SOCIAL STUDIES question about: ${t.label} — ${t.desc}.
+Include a short primary source quote, historical scenario, or document excerpt if relevant.
+Test critical thinking, cause-and-effect, or historical significance.${tLine}`,
+
+    geography: `Create a Grade ${g} GEOGRAPHY question about: ${t.label} — ${t.desc}.
+Include a description of a place, map description, or geographic scenario if useful.
+Test spatial thinking, geographic concepts, and real-world application.${tLine}`,
+
+    cs: `Create a Grade ${g} COMPUTER SCIENCE / CODING question about: ${t.label} — ${t.desc}.
+Include a short code snippet or pseudocode if relevant.
+Test conceptual understanding, debugging, or prediction of output.${tLine}`,
+
+    health: `Create a Grade ${g} HEALTH question about: ${t.label} — ${t.desc}.
+Include a real-world health scenario or case study if helpful.
+Focus on practical application, decision-making, or body/wellness knowledge.${tLine}`,
+
+    art: `Create a Grade ${g} ART question about: ${t.label} — ${t.desc}.
+Include a description of an artwork or visual scenario if helpful.
+Test analysis, art vocabulary, and critical thinking about creative work.${tLine}`,
+  };
+
+  return `You are an expert Grade ${g} teacher creating SBAC-style interactive assessment questions.
+
+${subjPrompts[subj] || subjPrompts.ela}
+
+Difficulty: ${dMap[diff] || dMap.medium}
+
+Make it engaging, relevant, and slightly different from typical textbook questions.
+
+Return ONLY valid JSON — no markdown, no backticks:
+{
+  "passage": "optional short passage/scenario/code snippet (empty string if not needed)",
+  "passage_title": "label for the passage if present, empty otherwise",
+  "question": "the full question text",
+  "type": "mc",
+  "choices": ["A. ...", "B. ...", "C. ...", "D. ..."],
+  "correct": "B",
+  "explanation": "2-3 encouraging sentences: why correct is right, why others are wrong. Use emojis!",
+  "wrong_hint": "1-2 sentence gentle directional hint if wrong — don't give the answer away",
+  "hint": "a helpful thinking hint the student can request before answering",
+  "sa_keywords": "",
+  "sa_model": ""
+}
+
+For short-answer (type: "sa"): leave choices/correct empty, fill sa_keywords (comma-separated key ideas) and sa_model (a strong sample answer).
+Make this question COMPLETELY ORIGINAL and make it interesting for a Grade ${g} student!`;
+}
+
+// ── GENERATE ────────────────────────────────────────────
+async function generateQ() {
+  if (busy || !skill) return;
+  busy = true;
+  document.getElementById('gen-btn').disabled = true;
+  hintOpen = false; hintHistory = [];
+
+  const s = SUBJECTS[subj];
+  const t = s.topics.find(x=>x.key===skill) || {label:skill, desc:''};
+  const main = document.getElementById('main');
+  const topTag = customTopic ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:#ccfbf1;border:2px solid #0d9488;color:#0d9488;font-size:12px;font-weight:700;margin-top:6px;cursor:pointer" onclick="openTopicModal()">🎯 ${customTopic}</span>` : '';
+
+  main.innerHTML = `
+    <div class="skill-hdr">
+      <div class="skill-top">
+        <div><div class="skill-title">${t.label}</div><div class="skill-sub">${t.desc}</div>${topTag}</div>
+        <span class="std-badge">Grade ${grade} · ${s.label}</span>
+      </div>
+      <div class="diff-row">
+        <span style="font-size:12px;font-weight:700;color:var(--muted);align-self:center;margin-right:4px">Level:</span>
+        <button class="diff-btn ${diff==='easy'?'active':''}" onclick="setDiff('easy')">😊 Easy</button>
+        <button class="diff-btn ${diff==='medium'?'active':''}" onclick="setDiff('medium')">🤔 Medium</button>
+        <button class="diff-btn ${diff==='hard'?'active':''}" onclick="setDiff('hard')">🔥 Hard</button>
+      </div>
+      <div class="prog-wrap"><div class="prog-bar" style="width:${Math.min(answered*7,100)}%"></div></div>
+    </div>
+    <div class="load-card">
+      <div class="bouncer">${s.emoji}</div>
+      <div class="spinner"></div>
+      <div class="load-txt">Generating your ${s.label} question...</div>
+    </div>`;
+
+  try {
+    const res = await puter.ai.chat(buildPrompt(), {model:'claude-haiku-4-5'});
+    const raw = typeof res==='string' ? res : (res?.message?.content?.[0]?.text || res?.text || JSON.stringify(res));
+    let q;
+    try { q = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch(e) { const m=raw.match(/\{[\s\S]*\}/); if(m) q=JSON.parse(m[0]); else throw new Error('parse'); }
+    renderQ(q, t, s);
+  } catch(err) {
+    main.innerHTML += `<div class="q-card" style="border-color:#fca5a5"><div class="q-body" style="text-align:center;padding:2rem">
+      <div style="font-size:36px;margin-bottom:10px">😅</div>
+      <div style="color:#ef4444;font-weight:700;margin-bottom:12px">Couldn't generate a question!<br><small style="font-weight:400;color:var(--muted)">Check your internet and try again.</small></div>
+      <button class="btn btn-check" onclick="generateQ()">Retry 🔄</button>
+    </div></div>`;
+  }
+  busy = false;
+  document.getElementById('gen-btn').disabled = false;
+}
+
+// ── RENDER QUESTION ─────────────────────────────────────
+function renderQ(q, topicObj, subjObj) {
+  const main = document.getElementById('main');
+  const isMC = q.type === 'mc';
+  const topTag = customTopic ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:#ccfbf1;border:2px solid #0d9488;color:#0d9488;font-size:12px;font-weight:700;margin-top:6px;cursor:pointer" onclick="openTopicModal()">🎯 ${customTopic}</span>` : '';
+  const dLabel = diff==='hard'?'🔥 Hard':diff==='easy'?'😊 Easy':'🤔 Medium';
+  const pHtml = q.passage ? `<div class="p-block"><div class="p-label">📖 ${q.passage_title||'Context'}</div><div class="p-text">${q.passage}</div></div>` : '';
+
+  let aHtml = '';
+  if (isMC) {
+    aHtml = `<div class="choices" id="choices">${
+      (q.choices||[]).map((ch,i)=>{
+        const l=['A','B','C','D'][i];
+        return `<button class="choice" onclick="checkMC('${l}','${q.correct}',this)" data-letter="${l}">
+          <span class="c-letter">${l}</span><span>${ch.replace(/^[A-D]\.\s*/,'')}</span>
+        </button>`;
+      }).join('')
+    }</div>`;
+  } else {
+    window._kwds = q.sa_keywords||''; window._saModel = q.sa_model||'';
+    aHtml = `<textarea class="sa-area" id="sa-inp" placeholder="Write your answer here — be specific and use evidence or examples!"></textarea>
+    <div class="sa-actions">
+      <button class="btn btn-check" onclick="checkSA()">✓ Check Answer</button>
+    </div>`;
+  }
+
+  main.innerHTML = `
+    <div class="skill-hdr">
+      <div class="skill-top">
+        <div><div class="skill-title">${topicObj.label}</div><div class="skill-sub">${topicObj.desc}</div>${topTag}</div>
+        <span class="std-badge">Grade ${grade} · ${subjObj.label}</span>
+      </div>
+      <div class="diff-row">
+        <span style="font-size:12px;font-weight:700;color:var(--muted);align-self:center;margin-right:4px">Level:</span>
+        <button class="diff-btn ${diff==='easy'?'active':''}" onclick="setDiff('easy')">😊 Easy</button>
+        <button class="diff-btn ${diff==='medium'?'active':''}" onclick="setDiff('medium')">🤔 Medium</button>
+        <button class="diff-btn ${diff==='hard'?'active':''}" onclick="setDiff('hard')">🔥 Hard</button>
+      </div>
+      <div class="prog-wrap"><div class="prog-bar" style="width:${Math.min(answered*7,100)}%"></div></div>
+    </div>
+    <div class="q-card">
+      ${pHtml}
+      <div class="q-body">
+        <div class="type-row">
+          <span class="tbadge ${isMC?'b-mc':'b-sa'}">${isMC?'Multiple Choice':'Short Answer'}</span>
+          <span class="tbadge b-diff">${dLabel}</span>
+        </div>
+        <div class="q-text">${q.question}</div>
+        ${aHtml}
+        <div class="fb" id="main-fb"></div>
+
+        <!-- AI HINT BOX -->
+        <div style="margin-top:10px">
+          <button class="btn btn-hint-toggle" id="hint-toggle-btn" onclick="toggleHint()">💡 Ask for a Hint</button>
+        </div>
+        <div class="hint-wrap" id="hint-wrap">
+          <div class="hint-card">
+            <div class="hint-head">
+              <div class="hint-head-l">
+                <div class="hint-owl">🦉</div>
+                <div>
+                  <div class="hint-hd-title">Hint Helper — GPT-4o</div>
+                  <div class="hint-hd-sub">I'll guide you but won't give the answer! 🤫</div>
+                </div>
+              </div>
+              <button class="hint-close-btn" onclick="toggleHint()">✕</button>
+            </div>
+            <div class="hint-rule">🚫 I ask YOU questions to help you think — no spoilers!</div>
+            <div class="hint-chips">
+              <button class="hint-chip" onclick="sendHint('I am stuck, where do I start?')">Where to start?</button>
+              <button class="hint-chip" onclick="sendHint('What strategy should I use?')">Strategy?</button>
+              <button class="hint-chip" onclick="sendHint('What clue should I look for?')">Key clue?</button>
+              <button class="hint-chip" onclick="sendHint('Can you re-explain the question in simpler words?')">Simpler words?</button>
+              <button class="hint-chip" onclick="sendHint('What concept do I need to know for this?')">What concept?</button>
+            </div>
+            <div class="hint-chat" id="hint-chat"></div>
+            <div class="hint-input-row">
+              <input class="hint-inp" id="hint-inp" placeholder="Ask for a hint..." onkeydown="if(event.key==='Enter')sendHint()"/>
+              <button class="hint-send" id="hint-send-btn" onclick="sendHint()">Ask 🦉</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="next-row" id="next-row" style="display:none">
+          <button class="btn btn-next" onclick="generateQ()">Next Question ➜</button>
+        </div>
+      </div>
+    </div>`;
+
+  window._q = q;
+  window._topicObj = topicObj;
+  window._subjObj = subjObj;
+
+  // Auto-load hint greeting
+  setTimeout(()=>{
+    const chat = document.getElementById('hint-chat');
+    if(!chat) return;
+    const msg = document.createElement('div');
+    msg.className='h-msg h-ai';
+    msg.innerHTML=`Hey! 👋 I'm your Hint Helper. I can see you're working on <strong>${topicObj.label}</strong> in ${subjObj.label}.<br><br>I won't give you the answer — but click a chip above or type a question and I'll help you think it through! 🧠`;
+    chat.appendChild(msg);
+  }, 100);
+}
+
+// ── HINT BOX TOGGLE ─────────────────────────────────────
+function toggleHint() {
+  const wrap = document.getElementById('hint-wrap');
+  const btn = document.getElementById('hint-toggle-btn');
+  if(!wrap) return;
+  if(wrap.classList.contains('open')) {
+    wrap.classList.remove('open');
+    if(btn) btn.textContent = '💡 Ask for a Hint';
+  } else {
+    wrap.classList.add('open');
+    if(btn) btn.textContent = '💡 Hide Hint Helper';
+    document.getElementById('hint-inp')?.focus();
+  }
+}
+
+// ── SEND HINT (GPT-4o, Socratic, no answers) ────────────
+async function sendHint(pretext) {
+  const inp = document.getElementById('hint-inp');
+  const btn = document.getElementById('hint-send-btn');
+  const chat = document.getElementById('hint-chat');
+  if(!inp||!btn||!chat) return;
+
+  const text = pretext || inp.value.trim();
+  if(!text) return;
+  if(!pretext) inp.value = '';
+  btn.disabled = true;
+
+  const q = window._q || {};
+  const topicObj = window._topicObj || {};
+  const subjObj = window._subjObj || {};
+
+  const uBubble = document.createElement('div');
+  uBubble.className = 'h-msg h-user';
+  uBubble.textContent = text;
+  chat.appendChild(uBubble);
+
+  const thinking = document.createElement('div');
+  thinking.className = 'h-msg h-think';
+  thinking.innerHTML = `Thinking<span class="dots"><span></span><span></span><span></span></span>`;
+  chat.appendChild(thinking);
+  chat.scrollTop = chat.scrollHeight;
+
+  hintHistory.push({role:'user', content: text});
+
+  try {
+    const sysPrompt = `You are a friendly, Socratic tutor helping a Grade ${grade} student with ${subjObj.label||'a subject'} — specifically the topic: "${topicObj.label||skill}".
+
+THE QUESTION THE STUDENT IS WORKING ON:
+"${q.question || 'unknown'}"
+${q.passage ? `\nCONTEXT/PASSAGE: "${q.passage}"` : ''}
+${q.correct ? `(Secret: correct answer is ${q.correct} — NEVER reveal this or hint toward it)` : ''}
+
+YOUR STRICT RULES:
+1. NEVER give the answer, never say which choice is correct, never strongly hint at the answer
+2. If student asks "just tell me" — kindly refuse: "I can't do that, but I can help you figure it out!"  
+3. Instead use Socratic method: ask guiding questions, point to key clues, explain relevant concepts
+4. Keep responses SHORT — 2-3 sentences max, like a real tutor giving a quick nudge
+5. Use emojis to keep it friendly and fun
+6. When helpful, explain the relevant concept/formula/rule — just not how it applies to THIS specific answer
+
+Good examples:
+- "What does the word 'photosynthesis' break down into? 🌿 What do those parts mean?"
+- "Try plugging each answer choice back into the equation and see which one works! 🔢"
+- "Look at the graph again — what's happening between years 2010 and 2015? 📊"`;
+
+    const messages = [
+      {role:'user', content: sysPrompt},
+      ...hintHistory.slice(-8).map(m => ({role:m.role, content:m.content}))
+    ];
+
+    const res = await puter.ai.chat(messages, {model:'gpt-4o'});
+    const raw = typeof res==='string'?res:(res?.message?.content?.[0]?.text||res?.text||'');
+    hintHistory.push({role:'assistant', content:raw});
+    thinking.className = 'h-msg h-ai';
+    thinking.innerHTML = raw.replace(/\n/g,'<br>');
+  } catch(e) {
+    thinking.className = 'h-msg h-ai';
+    thinking.innerHTML = 'Oops! Try again in a sec 🔄';
+  }
+  btn.disabled = false;
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// ── HELP PANEL ──────────────────────────────────────────
+function openHelp() { document.getElementById('help-ov').classList.add('open'); }
+function closeHelp() { document.getElementById('help-ov').classList.remove('open'); }
+
+function qHelp(q) {
+  document.getElementById('hp-ta').value = q;
+  sendHelp();
+}
+
+async function sendHelp() {
+  const ta = document.getElementById('hp-ta');
+  const btn = document.getElementById('hp-send');
+  const msg = ta.value.trim();
+  if(!msg || btn.disabled) return;
+  ta.value = ''; btn.disabled = true;
+
+  const list = document.getElementById('chat-list');
+  const uDiv = document.createElement('div');
+  uDiv.className='c-msg c-user'; uDiv.textContent=msg; list.appendChild(uDiv);
+  const tDiv = document.createElement('div');
+  tDiv.className='c-msg c-think'; tDiv.textContent='Thinking...'; list.appendChild(tDiv);
+  list.scrollTop=list.scrollHeight;
+
+  chatHistory.push({role:'user',content:msg});
+  const subjName = SUBJECTS[subj]?.label||'general';
+  const topicName = skill ? (SUBJECTS[subj]?.topics.find(t=>t.key===skill)?.label||skill) : '';
+
+  try {
+    const sys = `You are a friendly, encouraging tutor for Grade ${grade} students. 
+Current subject: ${subjName}${topicName?', topic: '+topicName:''}.
+Give clear, helpful, grade-appropriate explanations with examples. Use emojis! Keep it to 2-4 short paragraphs.
+NEVER give away answers to current questions — guide, explain concepts, give examples, but don't spoil.`;
+
+    const messages = [{role:'user',content:sys+'\n\nStudent: '+msg}];
+    if(chatHistory.length>1) messages.push(...chatHistory.slice(-6));
+
+    const res = await puter.ai.chat(messages, {model:'gpt-4o-mini'});
+    const raw = typeof res==='string'?res:(res?.message?.content?.[0]?.text||res?.text||'');
+    chatHistory.push({role:'assistant',content:raw});
+    tDiv.className='c-msg c-ai';
+    tDiv.innerHTML=raw.replace(/\n/g,'<br>');
+  } catch(e) {
+    tDiv.className='c-msg c-ai';
+    tDiv.innerHTML='Trouble connecting! Try again 🔄';
+  }
+  btn.disabled=false;
+  list.scrollTop=list.scrollHeight;
+}
+
+// ── CHECK ANSWERS ───────────────────────────────────────
+function checkMC(sel, correct, el) {
+  const area = document.getElementById('choices');
+  if(!area || area.querySelector('.correct')) return;
+  area.querySelectorAll('.choice').forEach(c=>c.disabled=true);
+  const fb = document.getElementById('main-fb');
+  const q = window._q;
+  sc.t++;
+  if(sel===correct) {
+    el.classList.add('correct');
+    fb.innerHTML = `✅ <strong>Correct!</strong> ${q.explanation||'Great work!'}`;
+    fb.className='fb good show';
+    sc.c++; fireConfetti();
+  } else {
+    el.classList.add('wrong');
+    area.querySelectorAll('.choice').forEach(c=>{if(c.dataset.letter===correct)c.classList.add('correct');});
+    fb.innerHTML = `❌ <strong>Not quite!</strong> ${q.wrong_hint||'Look at the highlighted answer above.'} The correct answer is highlighted.`;
+    fb.className='fb bad show';
+  }
+  answered++; updateScore();
+  document.getElementById('next-row').style.display='flex';
+}
+
+function checkSA() {
+  const inp = document.getElementById('sa-inp');
+  const fb = document.getElementById('main-fb');
+  if(!inp) return;
+  const txt = inp.value.toLowerCase().trim();
+  if(txt.length<15) { fb.innerHTML='Please write more before checking! 📝'; fb.className='fb info show'; return; }
+  const kws = (window._kwds||'').split(',').map(k=>k.trim().toLowerCase()).filter(Boolean);
+  const ratio = kws.length>0 ? kws.filter(k=>txt.includes(k)).length/kws.length : 0.5;
+  sc.t++; answered++;
+  if(ratio>=0.38) {
+    fb.innerHTML=`✅ <strong>Strong answer!</strong> You got the key ideas. For full credit, always support your answer with specific examples or evidence!<br><br>📖 <strong>Sample answer:</strong> <em style="color:var(--muted)">${window._saModel||'See your teacher.'}</em>`;
+    fb.className='fb good show'; sc.c++; fireConfetti();
+  } else {
+    fb.innerHTML=`🤔 <strong>Needs more detail.</strong> Make sure to include the key concepts and back them up with examples!<br><br>📖 <strong>Sample answer:</strong> <em style="color:var(--muted)">${window._saModel||'See your teacher.'}</em>`;
+    fb.className='fb bad show';
+  }
+  updateScore();
+  document.getElementById('next-row').style.display='flex';
+}
+
+function setDiff(d) {
+  diff = d;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.toggle('active', b.textContent.toLowerCase().includes(d)));
+  if(skill) generateQ();
+}
+
+function updateScore() {
+  document.getElementById('score-pill').textContent = `⭐ ${sc.c} / ${sc.t}`;
+}
+
+// ── CONFETTI ────────────────────────────────────────────
+function fireConfetti() {
+  const cols=['#6c3aed','#ec4899','#0ea5e9','#10b981','#f59e0b','#ef4444'];
+  for(let i=0;i<22;i++){
+    const el=document.createElement('div');
+    el.className='cf';
+    el.style.left=Math.random()*100+'vw';
+    el.style.top='-10px';
+    el.style.background=cols[Math.floor(Math.random()*cols.length)];
+    el.style.transform=`rotate(${Math.random()*360}deg)`;
+    el.style.width=el.style.height=(6+Math.random()*8)+'px';
+    el.style.animationDuration=(.8+Math.random()*.9)+'s';
+    el.style.animationDelay=Math.random()*.4+'s';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 2200);
+  }
+}
+</script>
+</body>
+</html>
